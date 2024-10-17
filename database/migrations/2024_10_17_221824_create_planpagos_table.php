@@ -13,19 +13,19 @@ return new class extends Migration
     {
         Schema::create('planpagos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('prestamo_id')->constrained('tbprestamos')->cascadeOnDelete();
-            $table->unsignedInteger('numero_cuota')->nullable();
+            $table->foreignId('prestamo_id')->constrained('prestamos')->cascadeOnDelete();
+            $table->unsignedInteger('numero_cuota');
             $table->date('fecha_pago');
-            $table->decimal('monto_principal')->nullable();
-            $table->decimal('monto_interes')->nullable();
-            $table->decimal('monto_seguro')->nullable();
-            $table->decimal('monto_otros')->nullable();
-            $table->decimal('saldo_prestamo')->nullable();
-            $table->decimal('tasa_interes')->nullable();
-            $table->decimal('saldo_principal')->nullable();
-            $table->decimal('saldo_interes')->nullable();
-            $table->decimal('saldo_seguro')->nullable();
-            $table->decimal('saldo_otros')->nullable();
+            $table->decimal('monto_principal');
+            $table->decimal('monto_interes');
+            $table->decimal('monto_seguro');
+            $table->decimal('monto_otros');
+            $table->decimal('saldo_prestamo');
+            $table->decimal('tasa_interes');
+            $table->decimal('saldo_principal');
+            $table->decimal('saldo_interes');
+            $table->decimal('saldo_seguro');
+            $table->decimal('saldo_otros');
             $table->string('observaciones'); 
             $table->timestamps();
         });
