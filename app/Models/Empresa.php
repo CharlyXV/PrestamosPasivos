@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class tbplanpagos extends Model
+class Empresa extends Model
 {
     //
 }

@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbproductos', function (Blueprint $table) {
-            $table->id();   
-            $table->string('nombre_producto'); 
+        Schema::create('empresas', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre_empresa'); 
             $table->timestamps();
         });
     }
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbproductos');
+        Schema::dropIfExists('empresas');
     }
 };

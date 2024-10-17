@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbtipotasas', function (Blueprint $table) {
+        Schema::create('lineas', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre_tipo_tasa'); 
+            $table->string('nombre_linea'); 
             $table->timestamps();
         });
     }
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbtipotasas');
+        Schema::dropIfExists('lineas');
     }
 };

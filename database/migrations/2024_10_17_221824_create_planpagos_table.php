@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbplanpagos', function (Blueprint $table) {
+        Schema::create('planpagos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('prestamo_id')->constrained('tbprestamos')->cascadeOnDelete();
             $table->unsignedInteger('numero_cuota')->nullable();
@@ -36,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbplanpagos');
+        Schema::dropIfExists('planpagos');
     }
 };

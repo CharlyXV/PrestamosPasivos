@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbprestamos', function (Blueprint $table) {
+        Schema::create('prestamos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('empresa_id')->constrained('tbempresas')->cascadeOnDelete();
             $table->string('numero_prestamo');
@@ -41,6 +41,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbprestamos');
+        Schema::dropIfExists('prestamos');
     }
 };

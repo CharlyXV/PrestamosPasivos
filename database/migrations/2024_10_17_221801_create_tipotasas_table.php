@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbbancos', function (Blueprint $table) {
+        Schema::create('tipotasas', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre_banco'); 
+            $table->string('nombre_tipo_tasa'); 
             $table->timestamps();
         });
     }
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbbancos');
+        Schema::dropIfExists('tipotasas');
     }
 };
