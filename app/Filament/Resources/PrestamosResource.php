@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PrestamosResource\Pages;
 use App\Filament\Resources\PrestamosResource\RelationManagers;
-use App\Models\Prestamos;
+use App\Models\Prestamo;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PrestamosResource extends Resource
 {
-    protected static ?string $model = Prestamos::class;
+    protected static ?string $model = Prestamo::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
