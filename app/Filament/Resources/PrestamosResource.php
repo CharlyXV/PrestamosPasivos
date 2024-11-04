@@ -241,21 +241,7 @@ class PrestamosResource extends Resource
                                         ->numeric()                                        
                                         ->nullable(), // Puede ser opcional                        
                                 ])                               
-                                ->mutateRelationshipDataBeforeFillUsing(function (Model $record, array $data) {
-                                    // Modificar datos antes de llenar el formulario
-                                    foreach ($data as &$item) {
-                                       
-                                        if (is_array($item)) {
-                                            // Ejemplo: Ajustar un campo específico antes de llenar el formulario
-                                            $item['monto_principal'] = $item['monto_principal'] * 1.1; // Aplica un 10% de incremento
-                                        } else {
-                                            // Manejar casos en los que $item no es un array
-                                            Log::warning('Elemento inesperado en $data:', ['item' => $item]);
-                                        }
-                                    }
-                                    return $data;
-                                })
-
+                                
 
                                // ->space(1)
                                 ->columns(7)
