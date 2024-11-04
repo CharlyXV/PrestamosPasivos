@@ -21,6 +21,7 @@ class ProductoResource extends Resource
     protected static ?string $model = Producto::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?int $navigationSort = 2;
     protected static ?string $navigationGroup = 'Gestión Recursos';
     public static function form(Form $form): Form
     {
