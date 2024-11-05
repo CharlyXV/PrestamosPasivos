@@ -19,8 +19,7 @@ return new class extends Migration
         $table->decimal('monto_intereses');
         $table->decimal('monto_seguro');
         $table->decimal('monto_otros');
-        $table->decimal('monto_cuota'); // DEBE SER IGUAL AL DEL RECIBO
-        $table->string('creado_por');
+        $table->decimal('monto_cuota'); // DEBE SER IGUAL AL DEL RECIBO        
         $table->timestamps();
 
         

@@ -8,6 +8,7 @@ use App\Models\Recibo;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Section;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,29 +28,70 @@ class RegistroDePagosResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
+        ->schema([
+            // schema 01
+            Section::make('Registro de Pagos')
+          //  ->description('Condiciones del Prestamo')
             ->schema([
-                Forms\Components\TextInput::make('empresa_id')
+                // schema 02
+                Forms\Components\Select::make('empresa_id')
+                ->relationship(name: 'empresa', 
+                               titleAttribute: 'nombre_empresa', 
+                               )
+                ->label('Empresa')                  
+                ->searchable()                 
+                ->preload() 
+                ->required(),
+
+                Forms\Components\Select::make('prestamo_id')
+                ->relationship(name: 'prestamo', 
+                               titleAttribute: 'numero_prestamo', 
+                               )
+                ->label('Numero Prestamo')
+                ->searchable()                 
+                ->preload() 
+                ->required(),
+
+              Forms\Components\Select::make('tipo_recibo')
+                    ->options([                  
+                    'CN' => 'Cuota Normal',
+                    'CA' => 'Cuota Anticipada',
+                    'LI' => 'Liquidación',
+                    ])
                     ->required(),
-                Forms\Components\TextInput::make('tipo_recibo')
-                    ->required(),
+ 
                 Forms\Components\TextInput::make('detalle')
                     ->required(),
-                Forms\Components\TextInput::make('estado')
+
+                 Forms\Components\Select::make('cuenta_id')
+                    ->relationship(name: 'cuenta', 
+                                   titleAttribute: 'numero_cuenta', 
+                                   )
+                    ->label('Cuenta Deposita')                  
+                    ->searchable()                 
+                    ->preload() 
                     ->required(),
-     
- 
-                    Forms\Components\Select::make('cuentas_id')
-                    ->relationship('cuentas', 'numero_cuenta')
-                    ->searchable()
-                    ->preload()                 
-                    ->createOptionForm([
-                         Forms\Components\TextInput::make('codigo_banco')
-                               ->required()
-                               ->maxLength(255),
-                
-                    ])     
+
+                    Forms\Components\TextInput::make('monto_recibo')
+                    ->label('Monto depositado')    
+                    ->numeric()
+                    ->maxValue(42949672.92),
+
+                    Forms\Components\DatePicker::make('fecha_pago')
+                    ->label('Fecha pago')    
                     ->required(),
-                    
+
+                    Forms\Components\DatePicker::make('fecha_deposito')
+                    ->label('Fecha Deposita')    
+                    ->required(),
+
+                    Forms\Components\Select::make('estado')
+                    ->options([                  
+                    'I' => 'Incluido',
+                    'C' => 'Contabilizado'
+                    ])
+                    ->required()
+            
               
                     /*
                 Forms\Components\TextInput::make('moneda_prestamo')
@@ -75,24 +117,51 @@ class RegistroDePagosResource extends Resource
                             ->required(),
                     ]),
                     */
-            ]);
+                    //
+                    //schema 02
+                    ]) 
+                    
+                ->collapsed()
+                ->columns(3),
+
+                      //schema 02
+            
+        ]); //schema 01
+
+
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('empresa_id'),
-                Tables\Columns\TextColumn::make('tipo_recibo'),
-                Tables\Columns\TextColumn::make('detalle'),
-                Tables\Columns\TextColumn::make('estado'),
-                Tables\Columns\TextColumn::make('cuentas.nombre_cuenta') // Relación a la cuenta bancaria
-                    ->label('Cuenta Bancaria'),
-                Tables\Columns\TextColumn::make('monto_recibo'),
-                Tables\Columns\TextColumn::make('fecha_pago')->date(),
+        ->columns([
+                //
+                Tables\Columns\TextColumn::make('id')
+                ->label('Numero Recibo')   
+                ->searchable()   
+                ->sortable(),
+                Tables\Columns\TextColumn::make('prestamo.numero_prestamo')
+                ->label('Numero Prestamo')
+                ->searchable()   
+                ->sortable() ,           
+                Tables\Columns\TextColumn::make('fecha_pago')
+                ->label('Fecha Pago')
+                ->searchable()   
+                ->sortable(), 
+                Tables\Columns\TextColumn::make('detalle')
+                ->searchable()   
+                ->sortable(), 
+   
+             
+                       
+                
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('estado')
+                ->options([
+                    'I' => 'Incluido',
+                    'C' => 'Contabilizado',
+                ]),
             ]);
     }
 

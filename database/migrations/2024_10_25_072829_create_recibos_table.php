@@ -13,19 +13,19 @@ return new class extends Migration
     {
         Schema::create('recibos', function (Blueprint $table) {
             $table->id(); // Primary Key: ID
-            $table->string('empresa_id');
-            $table->string('tipo_recibo'); // CUOTA, ANTICIPADO, LIQUIDACION
-            $table->string('detalle');
+            $table->string('empresa_id')->constrained('empresas')->cascadeOnDelete();
+            $table->foreignId('prestamo_id')->constrained('prestamos')->cascadeOnDelete();
+            $table->string('tipo_recibo'); // CUOTA NORMAL, ANTICIPADO, LIQUIDACION
+            $table->string('detalle'); 
             $table->string('estado'); // I = INCLUIDO, C = CONTABILIZADO, A = ANULADO
-            $table->foreignId('cuentas_id')->constrained('cuentas')->cascadeOnDelete();            
-            $table->string('moneda_prestamo');
-            $table->string('numero_prestamo');
-            $table->decimal('monto_recibo');
-            $table->date('fecha_pago');
-            $table->string('razon_anulacion')->nullable();
-            $table->date('fecha_anulacion')->nullable();
-            $table->decimal('saldo_anterior');
-            $table->decimal('saldo_actual');
+            $table->foreignId('cuenta_id')->constrained('cuentas')->cascadeOnDelete();                   
+            $table->decimal('monto_recibo'); 
+            $table->date('fecha_pago'); //fecha que se realiza el pago
+            $table->date('fecha_deposito'); //fecha que se realiza el deposito
+            $table->string('razon_anulacion')->nullable(); //se actualiza cuando se anula el recibo
+            $table->date('fecha_anulacion')->nullable(); //se actualiza cuando se anula el recibo
+            $table->decimal('saldo_anterior');  // se actualizan cuando se procesa el recibo
+            $table->decimal('saldo_actual'); // se actualizan cuando se procesa el recibo
             $table->timestamps();
     
             

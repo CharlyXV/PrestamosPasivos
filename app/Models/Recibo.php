@@ -29,4 +29,20 @@ class Recibo extends Model
     {
         return $this->hasMany(DetalleRecibo::class);
     }
+    public function empresa(): BeLongsTo
+    {
+        return $this->beLongsTo(Empresa::class);
+        
+    }
+    public function prestamo(): BeLongsTo
+    {
+        return $this->beLongsTo(Prestamo::class);
+        
+    }
+    public function cuenta(): BeLongsTo
+    {
+        return $this->beLongsTo(Cuenta::class);
+        
+    }
+
 }
