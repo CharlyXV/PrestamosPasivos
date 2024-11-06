@@ -169,7 +169,7 @@ class PrestamosResource extends Resource
                     ->schema([
                         // schema 04
                        //
-                            Forms\Components\DatePicker::make('Vencimiento')
+                            Forms\Components\DatePicker::make('vencimiento')
                             ->required(),
                             //->maxDate(now()),
                        //             
