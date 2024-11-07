@@ -19,7 +19,7 @@ use App\Filament\Resources\PrestamosResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PrestamosResource\RelationManagers;
 
-
+// cambio 1 
 
 class PrestamosResource extends Resource
 {
