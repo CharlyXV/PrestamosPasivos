@@ -18,12 +18,17 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PrestamosResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PrestamosResource\RelationManagers;
+
 use Filament\Tables\Actions\Action; 
 use Filament\Tables\Columns\TextColumn; 
 use Maatwebsite\Excel\Facades\Excel; 
 use App\Imports\PrestamosImport;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
+
+
+
+// cambio 1 
 
 
 class PrestamosResource extends Resource
