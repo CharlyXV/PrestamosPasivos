@@ -14,6 +14,10 @@ class EditPrestamos extends EditRecord
     {
         return [
             Actions\DeleteAction::make(),
+            /*Actions\Action::make('reporte')
+                ->label('Reporte Plan de Pagos')
+                ->url(fn() => route('loan.report', ['loan' => $this->record->id]))
+                ->openUrlInNewTab(),?*/
         ];
     }
 }

@@ -18,7 +18,12 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PrestamosResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PrestamosResource\RelationManagers;
-
+use Filament\Tables\Actions\Action; 
+use Filament\Tables\Columns\TextColumn; 
+use Maatwebsite\Excel\Facades\Excel; 
+use App\Imports\PrestamosImport;
+use Filament\Forms\Components\FileUpload;
+use Filament\Notifications\Notification;
 
 
 class PrestamosResource extends Resource
@@ -29,7 +34,6 @@ class PrestamosResource extends Resource
     protected static ?int $navigationSort = 1;
     protected static ?string $navigationGroup = 'Gestión Financiera';    
     
-    
     public static function form(Form $form): Form
     {
         return $form
@@ -38,6 +42,8 @@ class PrestamosResource extends Resource
                 Section::make('Préstamo')
                 ->description('Condiciones del Prestamo')
                 ->schema([
+                    
+
                     // schema 02
                   Forms\Components\Select::make('empresa_id')
                   ->relationship(name: 'empresa', 
@@ -319,6 +325,7 @@ class PrestamosResource extends Resource
 
     public static function table(Table $table): Table
     {
+        
         return $table
         ->columns([
             //
@@ -362,6 +369,8 @@ class PrestamosResource extends Resource
                 ]),
             ]);
     }
+
+  
 
     public static function getRelations(): array
     {
