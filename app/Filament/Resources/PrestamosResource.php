@@ -18,11 +18,12 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PrestamosResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PrestamosResource\RelationManagers;
-
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Tables\Actions\Action; 
 use Filament\Tables\Columns\TextColumn; 
 use Maatwebsite\Excel\Facades\Excel; 
 use App\Imports\PrestamosImport;
+use App\Models\Planpago;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 
@@ -266,7 +267,7 @@ class PrestamosResource extends Resource
                                 //->createItemButtonLabel('Agregar Cuota') // Texto del botón para agregar cuotas
                                 //->deleteItemButtonLabel('Eliminar Cuota'), // Texto del botón para eliminar cuotas
                         ])
-                       
+                
                         ->collapsed()
                        // ->columns(4),
 
@@ -289,12 +290,12 @@ class PrestamosResource extends Resource
         $data['saldo_interes'] = $data['monto_interes'];
         $data['saldo_principal'] = $data['monto_principal'];
         $data['saldo_otros'] = $data['monto_otros'];
- 
+
         // Obtener el saldo_prestamo de la tabla de 'prestamos'
         $prestamo = Prestamo::find($data['id']); // Usa la llave primaria o un criterio para encontrar el registro adecuado
         $data['saldo_prestamo'] = $prestamo ? $prestamo->saldo_prestamo : 0; // Asigna el valor si existe, de lo contrario, 0
 
-     
+    
 
         return $data;
     }
@@ -303,19 +304,19 @@ class PrestamosResource extends Resource
     {
      //  Log::info('Datos antes de crear:', $data);
 
-       logger('Datos antes de crear:', $data);
+    logger('Datos antes de crear:', $data);
 
         // Copia el valor al actualizar también        
         $data['saldo_seguro'] = $data['monto_seguro'];
         $data['saldo_interes'] = $data['monto_interes'];
         $data['saldo_principal'] = $data['monto_principal'];
         $data['saldo_otros'] = $data['monto_otros'];
- 
-          // Obtener el saldo_prestamo al actualizar también
-          $prestamo = Prestamo::find($data['id']);
-          $data['saldo_prestamo'] = $prestamo ? $prestamo->saldo_prestamo : 0;
 
-          
+          // Obtener el saldo_prestamo al actualizar también
+        $prestamo = Prestamo::find($data['id']);
+        $data['saldo_prestamo'] = $prestamo ? $prestamo->saldo_prestamo : 0;
+
+        
 
 
         return $data;
@@ -324,13 +325,13 @@ class PrestamosResource extends Resource
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
         $record->update($data);
-     
+    
         return $record;
     }
 
     public static function table(Table $table): Table
     {
-        
+
         return $table
         ->columns([
             //
@@ -353,9 +354,9 @@ class PrestamosResource extends Resource
                 //
                 Tables\Filters\SelectFilter::make('estado')
                 ->options([
-                  'A' => 'Activos',
-                  'P' => 'Pendientes',
-                  'L' => 'Liquidados',
+                    'A' => 'Activos',
+                    'P' => 'Pendientes',
+                    'L' => 'Liquidados',
                 ]),
 
             ])
@@ -374,8 +375,35 @@ class PrestamosResource extends Resource
                 ]),
             ]);
     }
+    public function importExcel(array $data)
+    {
+        try {
+            // Importar el archivo Excel usando Laravel Excel
+            Excel::import(new PrestamosImport, $data['excel_file']->getRealPath());
 
-  
+            // Notificación de éxito
+            Notification::make()
+                ->title('Importación exitosa')
+                ->body('Los datos del archivo Excel se han importado correctamente.')
+                ->success()
+                ->send();
+        } catch (\Exception $e) {
+            // Manejo de errores y notificación de fallo
+            Notification::make()
+                ->title('Error en la importación')
+                ->body('Ocurrió un error durante la importación: ' . $e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+    
+    public static function generateReport(Planpago $loan)
+    {
+        $payments = $loan->payments;
+
+        $pdf = Pdf::loadView('reports.loan_report', compact('loan', 'payments'));
+        return $pdf->download('loan_report.pdf');
+    }
 
     public static function getRelations(): array
     {
@@ -392,4 +420,5 @@ class PrestamosResource extends Resource
             'edit' => Pages\EditPrestamos::route('/{record}/edit'),
         ];
     }
+
 }

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Imports;
 
 use App\Models\Prestamo;
@@ -33,4 +32,5 @@ class PrestamosImport implements ToModel, WithHeadingRow
         ]);
     }
 }
+
 
