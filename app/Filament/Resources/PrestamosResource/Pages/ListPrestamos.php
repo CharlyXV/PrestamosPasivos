@@ -9,6 +9,7 @@ use App\Imports\PrestamosImport;
 //use Maatwebsite\Facades\Excel;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Filament\Resources\LoanResource;
+use App\Imports\PlanpagoImport;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Pages\ListRecords;
@@ -22,7 +23,7 @@ class ListPrestamos extends ListRecords
         return [
             Actions\CreateAction::make(),
             Action::make('import')
-             ->label('Importar Payments')
+             ->label('Importar Plan Pagos')
              ->color('danger')
              ->icon('heroicon-o-document-arrow-down')
              ->form([
@@ -35,11 +36,11 @@ class ListPrestamos extends ListRecords
                 //dd($data);
                 //dd($file);
 
-                Excel::import(new PrestamosImport, $file);
+                Excel::import(new PlanpagoImport, $file);
 
 
                 Notification::make()
-                ->Title('Importar Payments')
+                ->Title('Importar Plan Pagos')
                 ->success()
                 ->send();
                 

@@ -10,14 +10,14 @@ class PrestamosImport implements ToModel, WithHeadingRow
     public function model(array $row)
     {
         return new Prestamo([
-            'empresa_id' => $row['empresa_id'],
+          'empresa_id' => $row['empresa_id'],
             'numero_prestamo' => $row['numero_prestamo'],
             'banco_id' => $row['banco_id'],
             'linea_id' => $row['linea_id'],
             'forma_pago' => $row['forma_pago'],
-            'moneda' => $row['moneda'],
-            'formalizacion' => $row['formalizacion'],
-            'vencimiento' => $row['vencimiento'],
+            'moneda' => $row['moneda'],            
+            'formalizacion' => \Carbon\Carbon::parse($row['formalizacion']),            
+            'vencimiento' => \Carbon\Carbon::parse($row['vencimiento']),
             'proximo_pago' => $row['proximo_pago'],
             'monto_prestamo' => $row['monto_prestamo'],
             'saldo_prestamo' => $row['saldo_prestamo'],
