@@ -2,57 +2,59 @@
 
 namespace App\Models;
 
-use App\Casts\LoanController;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
-// cambio tasas
-
 
 class Prestamo extends Model
 {
     use HasFactory;
 
-    protected $fillable = [ 'empresa_id', 'numero_prestamo', 'banco_id', 'linea_id', 'forma_pago', 'moneda', 'formalizacion', 'vencimiento', 'proximo_pago', 'monto_prestamo', 'saldo_prestamo', 'plazo_meses', 'tipo_tasa_id', 'tasa_interes', 'tasa_spreed', 'cuenta_desembolso', 'estado', 'periodicidad_pago', 'observacion', ];
+    protected $fillable = [
+        'empresa_id', 
+        'numero_prestamo', 
+        'banco_id', 
+        'linea_id', 
+        'forma_pago', 
+        'moneda', 
+        'formalizacion', 
+        'vencimiento', 
+        'proximo_pago', 
+        'monto_prestamo', 
+        'saldo_prestamo', 
+        'plazo_meses', 
+        'tipotasa_id',
+        'tasa_interes', 
+        'tasa_spreed', 
+        'cuenta_desembolso', // Este campo se mantiene
+        'estado', 
+        'periodicidad_pago', 
+        'observacion'
+    ];
 
-    public function banco(): BeLongsTo
+    // Relaciones correctas
+    public function banco(): BelongsTo
     {
-        return $this->beLongsTo(Banco::class);
-        
+        return $this->belongsTo(Banco::class);
     }
 
-    public function empresa(): BeLongsTo
+    public function empresa(): BelongsTo
     {
-        return $this->beLongsTo(Empresa::class);
-        
+        return $this->belongsTo(Empresa::class);
     }
     
-    public function linea(): BeLongsTo
+    public function linea(): BelongsTo
     {
-        return $this->beLongsTo(Linea::class);
-        
+        return $this->belongsTo(Linea::class);
     }
     
-    public function producto(): BeLongsTo
+    public function tipotasa(): BelongsTo
     {
-        return $this->beLongsTo(Producto::class);
-        
+        return $this->belongsTo(Tipotasa::class, 'tipotasa_id');
     }
     
-    public function tipotasa(): BeLongsTo
+    public function planpagos()
     {
-        return $this->beLongsTo(Tipotasa::class);
-        
+        return $this->hasMany(Planpago::class);
     }
-    
-
-    public function planpago(): HasMany
-    {
-        return $this->hasMany(Planpago::class, 'prestamo_id');
-        
-    }
-
-
 }

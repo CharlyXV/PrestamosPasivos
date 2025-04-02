@@ -15,11 +15,10 @@ class EditPrestamos extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
             Actions\Action::make('reporte')
-                ->label('Reporte Plan de Pagos')
-                ->url(fn() => route('pay.report', ['prestamo' => $this->record->id])) // Asegúrate de que la ruta y parámetro sean correctos
-                ->openUrlInNewTab(),
+    ->label('Reporte Plan de Pagos')
+    ->url(fn() => route('pay.report', ['prestamo' => $this->record->id])) // ✅ Parámetro incluido
+    ->openUrlInNewTab(),
         ];
     }
 

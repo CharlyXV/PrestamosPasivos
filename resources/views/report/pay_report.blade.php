@@ -31,23 +31,23 @@
     <table>
         <tr>
             <th>Monto</th>
-            <td>{{ $loan->amount }}</td>
+            <td>{{ $prestamo->monto_prestamo }}</td>
         </tr>
         <tr>
             <th>Tasa de Interés</th>
-            <td>{{ $loan->interest_rate }}</td>
+            <td>{{ $prestamo->tasa_interes }}</td>
         </tr>
         <tr>
             <th>Plazo</th>
-            <td>{{ $loan->term }}</td>
+            <td>{{ $prestamo->plazo_meses }}</td>
         </tr>
         <tr>
             <th>Periodicidad</th>
-            <td>{{ $loan->frequency }}</td>
+            <td>{{ $prestamo->periodicidad_pago }}</td>
         </tr>
         <tr>
             <th>Tipo de Calendario</th>
-            <td>{{ $loan->calendar_type }}</td>
+            <td>{{ $prestamo->tipo_calendario }}</td>
         </tr>
     </table>
     
@@ -62,12 +62,12 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($payments as $payment)
+            @foreach ($planPagos as $planPago)
                 <tr>
-                    <td>{{ $payment->installment_number }}</td>
-                    <td>{{ $payment->amount }}</td>
-                    <td>{{ $payment->monthly_interest }}</td>
-                    <td>{{ \Carbon\Carbon::parse($payment->payment_date)->format('Y-m-d') }}</td>
+                    <td>{{ $planPago->numero_cuota }}</td>
+                    <td>{{ $planPago->monto_principal }}</td>
+                    <td>{{ $planPago->monto_interes }}</td>
+                    <td>{{ \Carbon\Carbon::parse($planPago->fecha_pago)->format('Y-m-d') }}</td>
                 </tr>
             @endforeach
         </tbody>

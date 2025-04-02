@@ -64,17 +64,23 @@ class ReportPayController extends Controller
         }
     }
 
-    public function generateReport(Prestamo $prestamo)
-    {
+    public function generateReport(Prestamo $prestamo) {
+        // Cargar la relación explícitamente
+        $prestamo->load('planpagos'); 
+    
+        // Verificar si hay registros
+        if ($prestamo->planpagos->isEmpty()) {
+            abort(404, 'No hay pagos asociados a este préstamo.');
+        }
+    
+        // Procesar los datos
         $planPagos = $prestamo->planpagos->map(function($planPago) {
             $planPago->fecha_pago = \Carbon\Carbon::parse($planPago->fecha_pago);
             return $planPago;
         });
-
-        // Generar el PDF utilizando la vista 'reports.loan_report'
+    
+        // Generar el PDF
         $pdf = Pdf::loadView('report.pay_report', compact('prestamo', 'planPagos'));
-
-        // Devolver el PDF para descarga
         return $pdf->download('pay_report.pdf');
     }
 }
