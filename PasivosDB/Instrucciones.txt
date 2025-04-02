@@ -1,0 +1,12 @@
+Instrucciones 
+
+debido a que para el desarrollo del proyecto se uso SQLExpress con autenticación por medio de windows no tiene un usuario de ingreso dedicado 
+
+solo el usuario que se creo para la conexión de la base de datos con el proyecto el cual su información es la siguiente 
+
+DB_CONNECTION=sqlsrv
+DB_HOST=127.0.0.1
+DB_PORT=1433
+DB_DATABASE=Pasivos
+DB_USERNAME=DB2
+DB_PASSWORD=83490976Ca.
