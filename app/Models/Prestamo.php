@@ -6,43 +6,60 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Http\Controllers\ReportPayController;
+use Illuminate\Support\Facades\Log;
+
 class Prestamo extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'empresa_id', 
-        'numero_prestamo', 
-        'banco_id', 
-        'linea_id', 
-        'forma_pago', 
-        'moneda', 
-        'formalizacion', 
-        'vencimiento', 
-        'proximo_pago', 
-        'monto_prestamo', 
-        'saldo_prestamo', 
-        'plazo_meses', 
+        'empresa_id',
+        'numero_prestamo',
+        'banco_id',
+        'linea_id',
+        'forma_pago',
+        'moneda',
+        'formalizacion',
+        'vencimiento',
+        'proximo_pago',
+        'monto_prestamo',
+        'saldo_prestamo',
+        'plazo_meses',
         'tipotasa_id',
-        'tasa_interes', 
-        'tasa_spreed', 
-        'cuenta_desembolso', // Este campo se mantiene
-        'estado', 
-        'periodicidad_pago', 
+        'tasa_interes',
+        'tasa_spreed',
+        'cuenta_desembolso',
+        'estado',
+        'periodicidad_pago',
         'observacion'
     ];
 
-    protected static function boot()
+    public function setPlazoMesesAttribute($value)
 {
-    parent::boot();
-
-    static::created(function ($prestamo) {
-        // Opcional: Doble seguro para generación automática
-        app(ReportPayController::class)->createPaymentPlan($prestamo);
-    });
+    $this->attributes['plazo_meses'] = is_numeric($value) ? (int)$value : 0;
 }
 
-    // Relaciones correctas
+public function setPeriodicidadPagoAttribute($value)
+{
+    $this->attributes['periodicidad_pago'] = is_numeric($value) ? (int)$value : 0;
+}
+    /*
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($prestamo) {
+            try {
+                // Generar plan de pagos automáticamente al crear un préstamo
+                app(ReportPayController::class)->createPaymentPlan($prestamo);
+            } catch (\Exception $e) {
+                Log::error('Error al generar plan de pagos desde el modelo: ' . $e->getMessage());
+                // No lanzamos excepción para no interrumpir la creación del préstamo
+            }
+        });
+    }
+    */
+    // Relaciones
     public function banco(): BelongsTo
     {
         return $this->belongsTo(Banco::class);
@@ -52,19 +69,19 @@ class Prestamo extends Model
     {
         return $this->belongsTo(Empresa::class);
     }
-    
+
     public function linea(): BelongsTo
     {
         return $this->belongsTo(Linea::class);
     }
-    
+
     public function tipotasa(): BelongsTo
     {
         return $this->belongsTo(Tipotasa::class, 'tipotasa_id');
     }
-    
+
     public function planpagos()
-{
-    return $this->hasMany(Planpago::class);
-}
+    {
+        return $this->hasMany(Planpago::class);
+    }
 }

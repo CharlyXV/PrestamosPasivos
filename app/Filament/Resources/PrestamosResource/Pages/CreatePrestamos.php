@@ -19,6 +19,7 @@ class CreatePrestamos extends CreateRecord
     protected static string $resource = PrestamosResource::class;
 
     // Método que se ejecuta después de crear un registro
+    
     protected function afterCreate(): void
     {
         $reportPayController = app(\App\Http\Controllers\ReportPayController::class);
