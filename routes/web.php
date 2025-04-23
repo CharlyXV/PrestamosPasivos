@@ -23,7 +23,7 @@ $routes = function () {
         return response()->json($user, 200);
     });*/
 
-   // En routes/web.php
+
 Route::get('/report/pay/{prestamoId}', [ReportPayController::class, 'generateReport'])
 ->name('report.pay');
 };
