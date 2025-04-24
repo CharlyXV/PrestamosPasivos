@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Session;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +24,16 @@ class AppServiceProvider extends ServiceProvider
     {
         Model::unguard();
         app()->setLocale('es');
+
+
+        if (Session::has('error')) {
+            Notification::make()
+                ->title('Error del sistema')
+                ->body(Session::get('error'))
+                ->danger()
+                ->persistent()
+                ->send();
+        }
     }
 
     
