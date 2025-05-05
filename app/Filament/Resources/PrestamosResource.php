@@ -25,9 +25,9 @@ use Filament\Forms\Set;
 class PrestamosResource extends Resource
 {
     protected static ?string $model = Prestamo::class;
-    protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
-    protected static ?int $navigationSort = 1;
-    protected static ?string $navigationGroup = 'Gestión Financiera';
+    protected static bool $canCreate = false;
+    protected static bool $shouldRegisterNavigation = false;
+
 
     public static function form(Form $form): Form
     {
@@ -500,8 +500,30 @@ class PrestamosResource extends Resource
                     Tables\Actions\DeleteAction::make(),
                 ]),
             ])
+            ->actions([
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make()
+                        ->action(function ($record) {
+                            try {
+                                $record->delete();
+                                Notification::make()
+                                    ->title('Préstamo eliminado con todas sus relaciones')
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                Notification::make()
+                                    ->title('Error al eliminar')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                ]),
+            ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                
             ]);
     }
 

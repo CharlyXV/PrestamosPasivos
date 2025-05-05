@@ -15,7 +15,7 @@ use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Notifications\Notification;
 use Filament\Pages\Concerns\InteractsWithFormActions;
-use Filament\Pages\Auth\Login as BaseLogin;
+use Filament\Pages\SimplePage;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
@@ -25,13 +25,22 @@ use LdapRecord\Connection;
 use LdapRecord\Models\Entry;
 use App\Models\User;
 
-class Login extends BaseLogin
+/**
+ * @property Form $form
+ */
+class Login extends SimplePage
 {
     use InteractsWithFormActions;
     use WithRateLimiting;
 
+    /**
+     * @var view-string
+     */
     protected static string $view = 'filament-panels::pages.auth.login';
 
+    /**
+     * @var array<string, mixed> | null
+     */
     public ?array $data = [];
 
     public function mount(): void
@@ -49,48 +58,25 @@ class Login extends BaseLogin
             $this->rateLimit(3);
         } catch (TooManyRequestsException $exception) {
             $this->getRateLimitedNotification($exception)?->send();
+
             return null;
         }
 
         $data = $this->form->getState();
 
-        // Usamos el 'username' directamente para la autenticación
-        $username = $data['username'];
-        $password = $data['password'];
+        //Personalización de login nativo de Filament, se agrega autenticación por AD y extracción de usuario a BD para forzar inicio de sesión si el AD da true, evitando pasar con la contraseña de BD
 
-        // #### LDAP COMENTADO ####
-        // Primero intentamos autenticar con LDAP
-        /*
-        if (!$this->authenticateWithLdap($username, $password)) {
-            // Si LDAP falla, intentamos autenticar con la base de datos local
-            if (!Filament::auth()->attempt([
-                'username' => $username, // Cambiamos 'email' por 'username'
-                'password' => $password,
-            ])) {
-                $this->throwFailureValidationException();
-            }
-        }
-        */
+        $username = strstr($data['email'], '@', true);
 
-        // #### SOLO AUTENTICACIÓN LOCAL ####
-        if (!Filament::auth()->attempt([
-            'username' => $username, // Cambiamos 'email' por 'username'
-            'password' => $password,
-        ])) {
+        if (! $this->authenticateWithLdap($username, $data['password'])) {
             $this->throwFailureValidationException();
+        }else{
+            $user = User::where('email', $data['email'])->first();
         }
 
-        // Buscamos al usuario en la base de datos por 'username'
-        $user = User::where('username', $username)->first();
-
-        if (!$user) {
-            // Si el usuario no existe en la base de datos, lo creamos
-            $user = User::create([
-                'username' => $username,
-                'name' => $username, // O cualquier otro campo necesario
-                'password' => bcrypt($password), // Opcional: puedes omitir esto si no usas contraseñas locales
-            ]);
-        }
+        /*if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
+            $this->throwFailureValidationException();
+        }*/
 
         Filament::auth()->login($user);
 
@@ -98,9 +84,10 @@ class Login extends BaseLogin
 
         if (
             ($user instanceof FilamentUser) &&
-            (!$user->canAccessPanel(Filament::getCurrentPanel()))
+            (! $user->canAccessPanel(Filament::getCurrentPanel()))
         ) {
             Filament::auth()->logout();
+
             $this->throwFailureValidationException();
         }
 
@@ -109,12 +96,12 @@ class Login extends BaseLogin
         return app(LoginResponse::class);
     }
 
-    // #### LDAP COMENTADO ####
-    /*
-    // Función para validar inicio de sesión por LDAP
+    //Función para poder validar inicio de sesión por AD
+
     protected function authenticateWithLdap(string $username, string $password): bool
     {
         try {
+
             $connection = new Connection([
                 'hosts' => [env('LDAP_HOST')],
                 'port' => env('LDAP_PORT', 389),
@@ -128,6 +115,7 @@ class Login extends BaseLogin
             $entry = $connection->query()->findBy('samaccountname', $username);
 
             if (isset($entry)) {
+
                 if ($connection->auth()->attempt($entry["distinguishedname"][0], $password)) {
                     return true;
                 } else {
@@ -138,11 +126,12 @@ class Login extends BaseLogin
             return false;
         } catch (\Exception $e) {
             throw ValidationException::withMessages([
-                'username' => 'Error conectando al servidor LDAP: ' . $e->getMessage(),
+                'email' => 'Error conectando al servidor LDAP: ' . $e->getMessage(),
             ]);
         }
+
+        return false;
     }
-    */
 
     protected function getRateLimitedNotification(TooManyRequestsException $exception): ?Notification
     {
@@ -161,7 +150,7 @@ class Login extends BaseLogin
     protected function throwFailureValidationException(): never
     {
         throw ValidationException::withMessages([
-            'data.username' => __('filament-panels::pages/auth/login.messages.failed'), // Cambiamos 'email' por 'username'
+            'data.email' => __('filament-panels::pages/auth/login.messages.failed'),
         ]);
     }
 
@@ -170,6 +159,9 @@ class Login extends BaseLogin
         return $form;
     }
 
+    /**
+     * @return array<int | string, string | Form>
+     */
     protected function getForms(): array
     {
         return [
@@ -178,7 +170,7 @@ class Login extends BaseLogin
                     ->schema([
                         $this->getEmailFormComponent(),
                         $this->getPasswordFormComponent(),
-                        $this->getRememberFormComponent(),
+                        //$this->getRememberFormComponent(),
                     ])
                     ->statePath('data'),
             ),
@@ -187,8 +179,9 @@ class Login extends BaseLogin
 
     protected function getEmailFormComponent(): Component
     {
-        return TextInput::make('username') // Cambiamos 'email' por 'username'
-            ->label("Usuario") // Cambiamos la etiqueta
+        return TextInput::make('email')
+            ->label(__('filament-panels::pages/auth/login.form.email.label'))
+            ->email()
             ->required()
             ->autocomplete()
             ->autofocus()
@@ -231,6 +224,9 @@ class Login extends BaseLogin
         return __('filament-panels::pages/auth/login.heading');
     }
 
+    /**
+     * @return array<Action | ActionGroup>
+     */
     protected function getFormActions(): array
     {
         return [
@@ -250,10 +246,14 @@ class Login extends BaseLogin
         return true;
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
     protected function getCredentialsFromFormData(array $data): array
     {
         return [
-            'username' => $data['username'], // Cambiamos 'email' por 'username'
+            'email' => $data['email'],
             'password' => $data['password'],
         ];
     }

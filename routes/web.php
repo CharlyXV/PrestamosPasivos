@@ -35,7 +35,9 @@ Route::get('change-language/{lang}', [LanguageController::class, 'changeLanguage
 ->name('change.language');
 
 Route::group(['prefix' => ''], $routes);
-Route::group(['prefix' => 'ProyectoLaravel'], $routes);
+Route::group(['prefix' => 'PrestamosPasivos'], $routes);
 
 Route::get('/recibos/{recibo}/download', [ReciboController::class, 'download'])
  ->name('recibos.download');
+
+

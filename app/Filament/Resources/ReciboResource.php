@@ -15,11 +15,10 @@ use Filament\Notifications\Notification;
 class ReciboResource extends Resource
 {
     protected static ?string $model = Recibo::class;
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    protected static ?string $navigationGroup = 'Gestión Financiera';
-    protected static ?int $navigationSort = 3;
-
+    // En ambos Resources (PrestamosResource y PagoResource) añade:
+    protected static bool $shouldRegisterNavigation = false;
     public static function form(Form $form): Form
+    
     {
         return $form
             ->schema([
@@ -196,56 +195,7 @@ class ReciboResource extends Resource
                         default => 'gray'
                     })
             ])
-            ->filters([
-                // Filtros correctos (solo SelectFilter y Filter)
-                Tables\Filters\SelectFilter::make('tipo_recibo')
-                    ->options([
-                        'CN' => 'Normal',
-                        'CA' => 'Anticipado',
-                        'LI' => 'Liquidación'
-                    ]),
-
-                Tables\Filters\SelectFilter::make('estado')
-                    ->options([
-                        'I' => 'Incluido',
-                        'C' => 'Completado',
-                        'A' => 'Anulado'
-                    ])
-                    ->default('I') // Filtro por defecto
-            ])
             ->actions([
-                Tables\Actions\Action::make('completar')
-                    ->label('Completar')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->action(function (Recibo $record) {
-                        $record->completar();
-                        Notification::make()
-                            ->title('Recibo completado')
-                            ->success()
-                            ->send();
-                    })
-                    ->visible(fn($record) => $record->estado == 'I')
-                    ->requiresConfirmation()
-                    ->modalHeading('Completar Recibo')
-                    ->modalDescription('¿Estás seguro de marcar este recibo como completado? Esta acción no se puede deshacer.')
-                    ->modalSubmitActionLabel('Sí, completar'),
-
-                Tables\Actions\Action::make('anular')
-                    ->label('Anular')
-                    ->icon('heroicon-o-x-circle')
-                    ->color('danger')
-                    ->action(function (Recibo $record) {
-                        $record->anular();
-                        Notification::make()
-                            ->title('Recibo anulado')
-                            ->success()
-                            ->send();
-                    })
-                    ->visible(fn($record) => $record->estado == 'I')
-                    ->requiresConfirmation(),
-
-                // Eliminé la acción duplicada de 'anular' que estaba más abajo
 
                 Tables\Actions\Action::make('imprimir')
                     ->label('Imprimir')
@@ -256,7 +206,7 @@ class ReciboResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                
             ]);
     }
 
