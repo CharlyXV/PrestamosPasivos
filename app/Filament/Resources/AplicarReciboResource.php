@@ -24,7 +24,7 @@ class AplicarReciboResource extends Resource
     protected static ?string $navigationLabel = 'Aplicar Recibos';
     protected static ?string $navigationGroup = 'Gestión de Pagos';
     protected static ?int $navigationSort = 2;
-    protected static ?string $modelLabel = 'Recibo a Aplicar';
+    protected static ?string $modelLabel = 'Aplicar Recibo';
     protected static ?string $slug = 'aplicar-recibos'; // Define una slug única
     protected static bool $shouldRegisterNavigation = false; // Oculta del menú automático
     public static function table(Table $table): Table

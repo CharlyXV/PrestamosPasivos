@@ -64,30 +64,44 @@ class Login extends SimplePage
 
         $data = $this->form->getState();
 
-        //Personalización de login nativo de Filament, se agrega autenticación por AD y extracción de usuario a BD para forzar inicio de sesión si el AD da true, evitando pasar con la contraseña de BD
-
+        // Extraer nombre de usuario del email
         $username = strstr($data['email'], '@', true);
 
-        if (! $this->authenticateWithLdap($username, $data['password'])) {
-            $this->throwFailureValidationException();
-        }else{
-            $user = User::where('email', $data['email'])->first();
+        // Buscar usuario por email o nombre de usuario
+        $user = User::where('email', $data['email'])
+            ->orWhere('username', $username)
+            ->first();
+
+        // Primero intentar autenticación LDAP con el username extraído del email
+        $ldapAuthenticated = $this->authenticateWithLdap($username, $data['password']);
+
+        // Si falla y el usuario existe, intentar con su username almacenado
+        if (!$ldapAuthenticated && $user) {
+            $ldapAuthenticated = $this->authenticateWithLdap($user->username, $data['password']);
         }
 
-        /*if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
-            $this->throwFailureValidationException();
-        }*/
+        // Si LDAP falla, intentar autenticación normal de Filament
+        $filamentAuthenticated = false;
+        if (!$ldapAuthenticated) {
+            $filamentAuthenticated = Filament::auth()->attempt(
+                $this->getCredentialsFromFormData($data), 
+                $data['remember'] ?? false
+            );
+        }
 
+        // Si todo falló o el usuario no existe, mostrar error
+        if ((!$ldapAuthenticated && !$filamentAuthenticated) || !$user) {
+            $this->throwFailureValidationException();
+        }
+
+        // Iniciar sesión
         Filament::auth()->login($user);
 
+        // Verificar que el usuario tenga acceso al panel
         $user = Filament::auth()->user();
-
-        if (
-            ($user instanceof FilamentUser) &&
-            (! $user->canAccessPanel(Filament::getCurrentPanel()))
-        ) {
+        if (($user instanceof FilamentUser) && 
+            (!$user->canAccessPanel(Filament::getCurrentPanel()))) {
             Filament::auth()->logout();
-
             $this->throwFailureValidationException();
         }
 
@@ -96,12 +110,9 @@ class Login extends SimplePage
         return app(LoginResponse::class);
     }
 
-    //Función para poder validar inicio de sesión por AD
-
     protected function authenticateWithLdap(string $username, string $password): bool
     {
         try {
-
             $connection = new Connection([
                 'hosts' => [env('LDAP_HOST')],
                 'port' => env('LDAP_PORT', 389),
@@ -115,11 +126,8 @@ class Login extends SimplePage
             $entry = $connection->query()->findBy('samaccountname', $username);
 
             if (isset($entry)) {
-
                 if ($connection->auth()->attempt($entry["distinguishedname"][0], $password)) {
                     return true;
-                } else {
-                    return false;
                 }
             }
 
@@ -129,8 +137,6 @@ class Login extends SimplePage
                 'email' => 'Error conectando al servidor LDAP: ' . $e->getMessage(),
             ]);
         }
-
-        return false;
     }
 
     protected function getRateLimitedNotification(TooManyRequestsException $exception): ?Notification
@@ -170,7 +176,6 @@ class Login extends SimplePage
                     ->schema([
                         $this->getEmailFormComponent(),
                         $this->getPasswordFormComponent(),
-                        //$this->getRememberFormComponent(),
                     ])
                     ->statePath('data'),
             ),

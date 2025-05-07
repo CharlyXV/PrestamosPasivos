@@ -114,6 +114,9 @@ class AdminPanelProvider extends PanelProvider
                 AnularReciboResource::class
 
             ])
+            ->resources([
+                \App\Filament\Resources\PrestamosResource::class,
+            ])
             ->navigationItems([
                 NavigationItem::make('Crear Recibo')
                     ->url(fn(): string => ReciboResource::getUrl('create'))
@@ -144,6 +147,5 @@ class AdminPanelProvider extends PanelProvider
                     ->activeIcon('heroicon-s-x-circle'),
             ]);
 
-           
     }
 }

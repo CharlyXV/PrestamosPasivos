@@ -478,6 +478,12 @@ class PrestamosResource extends Resource
                         'I' => 'Incluido',
                         default => $state,
                     }),
+                //Nueva columna para mostrar el número de cuotas en el plan de pagos
+                TextColumn::make('plan_pagos_count')
+                    ->label('Cuotas')
+                    ->counts('planPagos')
+                    ->badge()
+                    ->color('primary'),
             ])
             ->filters([
                 SelectFilter::make('estado')
@@ -485,7 +491,8 @@ class PrestamosResource extends Resource
                         'A' => 'Activos',
                         'L' => 'Liquidados',
                         'I' => 'Incluidos',
-                    ]),
+                    ])
+                    ->default('A'),
 
                 SelectFilter::make('empresa_id')
                     ->relationship('empresa', 'nombre_empresa')
@@ -494,37 +501,29 @@ class PrestamosResource extends Resource
                     ->label('Empresa'),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make(),
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\DeleteAction::make(),
-                ]),
+                Tables\Actions\ViewAction::make()
+                    ->label('Ver Plan de Pagos')
+                    ->icon('heroicon-o-document-text')
+                    ->url(fn(Prestamo $record): string => static::getUrl('view', ['record' => $record])),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->action(function ($record) {
+                        try {
+                            $record->delete();
+                            Notification::make()
+                                ->title('Préstamo eliminado con todas sus relaciones')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Error al eliminar')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
             ])
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make(),
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\DeleteAction::make()
-                        ->action(function ($record) {
-                            try {
-                                $record->delete();
-                                Notification::make()
-                                    ->title('Préstamo eliminado con todas sus relaciones')
-                                    ->success()
-                                    ->send();
-                            } catch (\Exception $e) {
-                                Notification::make()
-                                    ->title('Error al eliminar')
-                                    ->body($e->getMessage())
-                                    ->danger()
-                                    ->send();
-                            }
-                        })
-                ]),
-            ])
-            ->bulkActions([
-                
-            ]);
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array
@@ -540,6 +539,7 @@ class PrestamosResource extends Resource
             'index' => Pages\ListPrestamos::route('/'),
             'create' => Pages\CreatePrestamos::route('/create'),
             'edit' => Pages\EditPrestamos::route('/{record}/edit'),
+            'view' => Pages\ViewPrestamo::route('/{record}/view'),  // Asegúrate de que este apunte a la clase correcta
         ];
     }
 }
