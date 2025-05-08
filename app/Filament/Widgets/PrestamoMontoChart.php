@@ -3,13 +3,13 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Prestamo;
-use App\Enums\PrestamoEstadoEnum;
+use App\Helpers\CurrencyHelper;
 use Filament\Widgets\ChartWidget;
 
-class Pchart extends ChartWidget
+class PrestamoMontoChart extends ChartWidget
 {
-    protected static ?string $heading = 'Distribución por Cantidad';
-    protected static ?int $sort = 2;
+    protected static ?string $heading = 'Distribución por Monto (USD)';
+    protected static ?int $sort = 3;
     protected static ?string $maxHeight = '350px';
     
     protected int | string | array $columnSpan = [
@@ -20,11 +20,14 @@ class Pchart extends ChartWidget
     
     protected function getData(): array
     {
-        $data = Prestamo::select('estado')
-            ->selectRaw('count(*) as count')
-            ->groupBy('estado')
-            ->get();
-            
+        $prestamos = Prestamo::all();
+        $dataByEstado = ['A' => 0, 'L' => 0, 'I' => 0];
+        
+        foreach ($prestamos as $prestamo) {
+            $amountUSD = CurrencyHelper::convertToBaseCurrency($prestamo->monto_prestamo, $prestamo->moneda);
+            $dataByEstado[$prestamo->estado] += $amountUSD;
+        }
+        
         $colors = [
             'A' => ['bg' => 'rgba(59, 130, 246, 0.8)', 'border' => 'rgba(37, 99, 235, 1)'],
             'L' => ['bg' => 'rgba(16, 185, 129, 0.8)', 'border' => 'rgba(5, 150, 105, 1)'],
@@ -35,21 +38,20 @@ class Pchart extends ChartWidget
         $values = [];
         $backgroundColors = [];
         
-        foreach (PrestamoEstadoEnum::cases() as $case) {
-            $record = $data->firstWhere('estado', $case->value);
-            $values[] = $record ? $record->count : 0;
-            $backgroundColors[] = $colors[$case->value]['bg'];
+        foreach ($dataByEstado as $estado => $amount) {
+            $values[] = round($amount, 2);
+            $backgroundColors[] = $colors[$estado]['bg'];
         }
         
         return [
             'datasets' => [
                 [
-                    'label' => 'Cantidad',
+                    'label' => 'Monto USD',
                     'data' => $values,
                     'backgroundColor' => $backgroundColors,
                     'borderColor' => array_column($colors, 'border'),
                     'borderWidth' => 1,
-                    'barThickness' => 40, // Controla el grosor de las barras
+                    'barThickness' => 40,
                 ],
             ],
             'labels' => $labels,
@@ -64,19 +66,19 @@ class Pchart extends ChartWidget
     protected function getOptions(): array
     {
         return [
+            'indexAxis' => 'y', // Hacemos las barras horizontales
             'scales' => [
-                'y' => [
+                'x' => [
                     'beginAtZero' => true,
                     'ticks' => [
-                        'precision' => 0,
-                        'stepSize' => 1
+                        'callback' => 'function(value) { return "$" + value.toLocaleString(); }'
                     ],
                     'grid' => [
                         'drawOnChartArea' => true,
                         'color' => 'rgba(0, 0, 0, 0.05)',
                     ],
                 ],
-                'x' => [
+                'y' => [
                     'grid' => [
                         'display' => false,
                     ],
@@ -84,15 +86,13 @@ class Pchart extends ChartWidget
             ],
             'plugins' => [
                 'legend' => [
-                    'display' => false, // Ocultamos leyenda para ahorrar espacio
+                    'display' => false,
                 ],
                 'tooltip' => [
                     'enabled' => true,
-                    'backgroundColor' => 'rgba(30, 41, 59, 0.95)',
-                    'bodyFont' => ['size' => 14],
                     'callbacks' => [
                         'label' => 'function(context) {
-                            return ` ${context.label}: ${context.raw} financiamientos`;
+                            return ` ${context.label}: $${context.raw.toLocaleString()}`;
                         }'
                     ]
                 ],

@@ -93,7 +93,8 @@ class PagoResource extends Resource
                             'EUR' => '€',
                             default => $record->prestamo->moneda
                         };
-                        return $simbolo . ' ' . number_format($state, 2);
+                        $pagado = $record->monto_pagado_principal; // Usar el atributo calculado
+                        return $simbolo . ' ' . number_format($record->monto_principal, 2);
                     }),
 
                 TextColumn::make('monto_interes')
@@ -105,11 +106,12 @@ class PagoResource extends Resource
                             'EUR' => '€',
                             default => $record->prestamo->moneda
                         };
-                        return $simbolo . ' ' . number_format($state, 2);
+                        $pagado = $record->monto_pagado_interes; // Usar el atributo calculado
+                        return $simbolo .  '  ' . number_format($record->monto_interes, 2);
                     }),
 
-                TextColumn::make('monto_total')
-                    ->label('Total Cuota')
+                TextColumn::make('saldo_pendiente')
+                    ->label('Saldo Pendiente')
                     ->formatStateUsing(function ($state, $record) {
                         $simbolo = match ($record->prestamo->moneda) {
                             'CRC' => '₡',
@@ -118,9 +120,13 @@ class PagoResource extends Resource
                             default => $record->prestamo->moneda
                         };
                         return $simbolo . ' ' . number_format($state, 2);
+                    })
+                    ->color(function ($state) {
+                        return $state > 0 ? 'danger' : 'success';
                     }),
 
-                    TextColumn::make('saldo_prestamo')
+
+                TextColumn::make('saldo_prestamo')
                     ->label('S* Prestamo')
                     ->formatStateUsing(function ($state, $record) {
                         $simbolo = match ($record->prestamo->moneda) {
@@ -148,11 +154,7 @@ class PagoResource extends Resource
                     })
 
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
-                    ->visible(fn($record) => $record->plp_estados !== 'completado'),
-                // ... otras acciones
-            ])
+
 
             ->filters([
                 SelectFilter::make('prestamo_id')
@@ -213,7 +215,7 @@ class PagoResource extends Resource
                         }
                     }),
 
-                    Action::make('generar_reporte')
+                Action::make('generar_reporte')
                     ->label('Generar Reporte')
                     ->icon('heroicon-o-document-text')
                     ->form([
@@ -227,15 +229,13 @@ class PagoResource extends Resource
                         if (!isset($data['prestamo_id'])) {
                             throw new \Exception('Debe seleccionar un préstamo');
                         }
-                        
+
                         return redirect()->route('report.pay', [
                             'prestamoId' => $data['prestamo_id'] // Asegúrate que coincida con la ruta
                         ]);
                     })
             ])
-            ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
-            ]);
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array

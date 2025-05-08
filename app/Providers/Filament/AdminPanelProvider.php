@@ -54,10 +54,12 @@ class AdminPanelProvider extends PanelProvider
                 Pages\Dashboard::class, // Página de inicio del panel
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
-            ])
+        ->widgets([
+            \App\Filament\Widgets\PrestamoEstadoOverview::class,
+            \App\Filament\Widgets\Pchart::class,
+            \App\Filament\Widgets\PrestamoMontoChart::class,
+        ])
+                
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

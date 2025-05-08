@@ -502,7 +502,7 @@ class PrestamosResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
-                    ->label('Ver Plan de Pagos')
+                    ->label('Ver')
                     ->icon('heroicon-o-document-text')
                     ->url(fn(Prestamo $record): string => static::getUrl('view', ['record' => $record])),
                 Tables\Actions\EditAction::make(),
