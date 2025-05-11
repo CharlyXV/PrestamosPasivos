@@ -7,6 +7,10 @@ use App\Filament\Resources\PrestamosResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use App\Http\Controllers\ReportPayController;
+use App\Filament\Resources\PagoResource;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\HiddenInput;
 
 class EditPrestamos extends EditRecord
 {
@@ -88,5 +92,21 @@ class EditPrestamos extends EditRecord
         }
         return round((float)$value, 2);
     }
+
+    // app/Filament/Resources/PrestamosResource/Pages/EditPrestamos.php
+    protected function getFormSchema(): array
+    {
+        return [
+            ...parent::getFormSchema(),
+            Hidden::make('id') // Ahora usa la importación correcta
+                ->afterStateHydrated(function ($component, $state) {
+                    $component->getContainer()
+                        ->getComponent('planPagosTable')
+                        ->statePath('prestamoId', $state);
+                }),
+        ];
+    }
+
+
 }
 

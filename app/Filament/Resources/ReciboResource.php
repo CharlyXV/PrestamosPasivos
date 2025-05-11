@@ -17,7 +17,7 @@ class ReciboResource extends Resource
 {
     protected static ?string $model = Recibo::class;
     protected static bool $shouldRegisterNavigation = false;
-
+    
     public static function form(Form $form): Form
     {
         return $form
@@ -261,8 +261,18 @@ class ReciboResource extends Resource
 
                 Tables\Columns\TextColumn::make('monto_recibo')
                     ->money(fn($record) => $record->prestamo->moneda ?? 'CRC')
+                    ->label('Monto Recibo')
+                    ->formatStateUsing(function ($state, $record) {
+                        $simbolo = match ($record->prestamo->moneda) {
+                            'CRC' => '₡',
+                            'USD' => '$',
+                            'EUR' => '€',
+                            default => $record->prestamo->moneda
+                        };
+                        return $simbolo . ' ' . number_format($state, 2);
+                    })
                     ->sortable(),
-
+                    
                 Tables\Columns\TextColumn::make('fecha_pago')
                     ->date()
                     ->sortable(),

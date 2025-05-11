@@ -5,9 +5,9 @@ namespace App\Filament\Resources\PrestamosResource\Pages;
 use App\Filament\Resources\PrestamosResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
-use Filament\Tables\Actions\Action; 
-use Filament\Tables\Columns\TextColumn; 
-use Maatwebsite\Excel\Facades\Excel; 
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\TextColumn;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\PrestamosImport;
 use App\Models\Planpago;
 use Filament\Forms\Components\FileUpload;
@@ -19,12 +19,17 @@ class CreatePrestamos extends CreateRecord
     protected static string $resource = PrestamosResource::class;
 
     // Método que se ejecuta después de crear un registro
-    
+
     /*protected function afterCreate(): void
     {
         $reportPayController = app(\App\Http\Controllers\ReportPayController::class);
         $reportPayController->createPaymentPlan($this->record);
     }*/
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 
     protected function getHeaderActions(): array
     {

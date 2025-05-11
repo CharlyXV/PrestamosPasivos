@@ -21,6 +21,9 @@ use Illuminate\Http\Request;
 use Filament\Notifications\Notification;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Forms\Components\Livewire;
+use App\Filament\Resources\PagoResource\Pages\ListPagos;
+use App\Filament\Resources\PrestamosResource\Pages\Components\PlanPagosTable;
 
 class PrestamosResource extends Resource
 {
@@ -203,7 +206,7 @@ class PrestamosResource extends Resource
                                 $set('proximo_pago', null);
                             }),
 
-                        Select::make('plazo_meses')
+                            Select::make('plazo_meses')
                             ->label(function (Get $get) {
                                 $periodicidad = $get('periodicidad_pago');
                                 return match ((int)$periodicidad) {
@@ -222,7 +225,7 @@ class PrestamosResource extends Resource
                             ])
                             ->options(function (Get $get) {
                                 $periodicidad = (int)$get('periodicidad_pago');
-
+                        
                                 $getPeriodoNombre = function ($cantidad, $periodicidad) {
                                     $singular = match ($periodicidad) {
                                         1 => 'año',
@@ -233,7 +236,7 @@ class PrestamosResource extends Resource
                                         12 => 'mes',
                                         default => 'periodo'
                                     };
-
+                        
                                     $plural = match ($periodicidad) {
                                         1 => 'años',
                                         2 => 'semestres',
@@ -243,29 +246,36 @@ class PrestamosResource extends Resource
                                         12 => 'meses',
                                         default => 'periodos'
                                     };
-
+                        
                                     return $cantidad === 1 ? $singular : $plural;
                                 };
-
+                        
                                 $options = [];
-                                for ($i = 1; $i <= 64; $i++) {
+                                // Aumentamos el rango a 180
+                                for ($i = 1; $i <= 180; $i++) {
                                     $options[$i] = $i . ' ' . $getPeriodoNombre($i, $periodicidad);
                                 }
                                 return $options;
                             })
+                            ->searchable() // Permite buscar escribiendo
+                            ->rules([
+                                'numeric',
+                                'min:1',
+                                'max:180'
+                            ])
                             ->live()
                             ->afterStateUpdated(function (Get $get, Set $set) {
                                 $periodicidad = (int)$get('periodicidad_pago');
                                 $plazoPeriodos = (int)$get('plazo_meses');
                                 $formalizacion = $get('formalizacion');
-
+                        
                                 if ($periodicidad && $plazoPeriodos && $formalizacion) {
                                     $mesesTotales = $plazoPeriodos * (12 / $periodicidad);
                                     $fechaFormalizacion = \Carbon\Carbon::parse($formalizacion);
-
+                        
                                     $vencimiento = $fechaFormalizacion->copy()->addMonths($mesesTotales);
                                     $set('vencimiento', $vencimiento->format('Y-m-d'));
-
+                        
                                     $proximoPago = $fechaFormalizacion->copy()->addMonths(12 / $periodicidad);
                                     $set('proximo_pago', $proximoPago->format('Y-m-d'));
                                 }
@@ -337,6 +347,15 @@ class PrestamosResource extends Resource
                     ])
                     ->columns(3)
                     ->collapsible(),
+
+                    Section::make('Plan de Pagos')
+                    ->schema([
+                        Livewire::make(PlanPagosTable::class)
+                            ->columnSpanFull()
+                            ->hidden(fn ($operation) => $operation === 'create')
+                    ])
+                    ->collapsible()
+                    ->hidden(fn ($operation) => $operation === 'create'),
             ]);
     }
 

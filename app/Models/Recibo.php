@@ -165,6 +165,7 @@ class Recibo extends Model
     
             // Marcar recibo como completado
             $this->update(['estado' => 'C']);
+            
         });
     }
 

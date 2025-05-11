@@ -27,6 +27,7 @@ use App\Filament\Resources\AnularReciboResource;
 use App\Filament\Resources\ReciboResource;
 use App\Filament\Resources\GestionContable\ConsultaAsientoResource;
 use App\Filament\Resources\ReportesGerenciales\ReporteDisponibilidadResource;
+
 use App\Filament\Resources\ReportesGerenciales\ReporteGastoResource;
 
 class AdminPanelProvider extends PanelProvider
@@ -58,6 +59,7 @@ class AdminPanelProvider extends PanelProvider
             \App\Filament\Widgets\PrestamoEstadoOverview::class,
             \App\Filament\Widgets\Pchart::class,
             \App\Filament\Widgets\PrestamoMontoChart::class,
+            
         ])
                 
             ->middleware([
