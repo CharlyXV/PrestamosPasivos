@@ -36,6 +36,12 @@ class Prestamo extends Model
         'observacion'
     ];
 
+    protected $casts = [
+        'tasa_interes' => 'decimal:4',
+        'tasa_spreed' => 'decimal:4',
+        'plazo_meses' => 'integer',
+    ];
+
     public function setPlazoMesesAttribute($value)
     {
         $this->attributes['plazo_meses'] = is_numeric($value) ? (int)$value : 0;
@@ -96,5 +102,16 @@ class Prestamo extends Model
             $prestamo->planpagos()->delete();
         }
     });
+}
+public function setMontoPrestamoAttribute($value)
+{
+    $this->attributes['monto_prestamo'] = is_string($value) ? 
+        str_replace(',', '', $value) : $value;
+}
+
+public function setSaldoPrestamoAttribute($value)
+{
+    $this->attributes['saldo_prestamo'] = is_string($value) ? 
+        str_replace(',', '', $value) : $value;
 }
 }

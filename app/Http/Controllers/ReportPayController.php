@@ -84,64 +84,6 @@ class ReportPayController extends Controller
             // otros campos necesarios
         ]);
     }
-    /*
-    public function createPaymentPlan(Prestamo $prestamo)
-    {
-        try {
-            Planpago::where('prestamo_id', $prestamo->id)->delete();
-
-            $loanAmount = (float)$prestamo->monto_prestamo;
-            $interestRate = (float)$prestamo->tasa_interes / 100;
-            $term = (int)$prestamo->plazo_meses;
-            $monthlyRate = $interestRate / 12;
-
-            $monthlyPayment = $loanAmount * $monthlyRate / (1 - pow(1 + $monthlyRate, -$term));
-            $remainingBalance = $loanAmount;
-
-            for ($i = 1; $i <= $term; $i++) {
-                $interestPayment = $remainingBalance * $monthlyRate;
-                $principalPayment = $monthlyPayment - $interestPayment;
-                $remainingBalance -= $principalPayment;
-
-                Planpago::create([
-                    'prestamo_id' => $prestamo->id,
-                    'numero_cuota' => $i,
-                    'fecha_pago' => $this->calculateDueDate($prestamo->formalizacion, $i),
-                    'monto_principal' => $this->roundAmount($principalPayment),
-                    'monto_interes' => $this->roundAmount($interestPayment),
-                    'monto_seguro' => 1,
-                    'monto_otros' => 1,
-                    'saldo_prestamo' => $this->roundAmount(max($remainingBalance, 1)),
-                    'tasa_interes' => $prestamo->tasa_interes,
-                    'saldo_principal' => $this->roundAmount($principalPayment),
-                    'saldo_interes' => $this->roundAmount($interestPayment),
-                    'saldo_seguro' => 1,
-                    'saldo_otros' => 1,
-                    'observaciones' => 'Cuota ' . $i . ' de ' . $term,
-                    'plp_estados' => 'pendiente'
-                ]);
-            }
-
-            Log::info("Plan de pagos generado para préstamo {$prestamo->id}");
-        } catch (\Exception $e) {
-            Log::error("Error generando plan de pagos: " . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    protected function calculateDueDate($startDate, $monthOffset)
-    {
-        return Carbon::parse($startDate)
-            ->addMonths((int)$monthOffset) // Asegurar conversión a entero
-            ->format('Y-m-d');
-    }
-
-    private function roundAmount(float $amount, int $decimals = 2): float
-    {
-        return round($amount, $decimals);
-    }
-    */
-
 
     public function createPaymentPlan(Prestamo $prestamo)
     {
@@ -199,13 +141,16 @@ class ReportPayController extends Controller
         }
     }
     
-    // Métodos auxiliares (pueden ir en el mismo controlador o en un trait)
     protected function calculateDueDate($startDate, $monthOffset)
     {
-        return Carbon::parse($startDate)
-            ->addMonths((int)$monthOffset)
-            ->format('Y-m-d');
+        $date = Carbon::parse($startDate);
+        
+        // addMonthsNoOverflow evita saltos de mes y ajusta a fin de mes si es necesario
+        $newDate = $date->copy()->addMonthsNoOverflow((int)$monthOffset);
+    
+        return $newDate->format('Y-m-d');
     }
+    
     
     protected function roundAmount(float $amount, int $decimals = 2): float
     {

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ReciboController;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\ExportDisponibilidadController;
 
 $routes = function () {
     Route::get('/', function () {
@@ -40,4 +41,6 @@ Route::group(['prefix' => 'PrestamosPasivos'], $routes);
 Route::get('/recibos/{recibo}/download', [ReciboController::class, 'download'])
  ->name('recibos.download');
 
-
+ Route::get('/exportar/disponibilidad', ExportDisponibilidadController::class)
+ ->name('exportar.disponibilidad')
+ ->middleware('auth'); // Asegura que solo usuarios autenticados puedan exportar

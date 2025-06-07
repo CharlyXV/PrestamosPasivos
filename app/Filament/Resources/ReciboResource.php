@@ -17,7 +17,7 @@ class ReciboResource extends Resource
 {
     protected static ?string $model = Recibo::class;
     protected static bool $shouldRegisterNavigation = false;
-    
+
     public static function form(Form $form): Form
     {
         return $form
@@ -90,10 +90,13 @@ class ReciboResource extends Resource
                             ->numeric()
                             ->required()
                             ->minValue(0.01)
+                            ->step(0.01)
+                            ->formatStateUsing(fn($state) => $state ? number_format($state, 2, '.', '') : '0.00')
+                            ->extraInputAttributes(['style' => 'text-align: right;'])
                             ->disabled(fn(Forms\Get $get) => $get('tipo_pago') === 'normal')
                             ->dehydrated(),
 
-                            Forms\Components\TextInput::make('moneda_prestamo')
+                        Forms\Components\TextInput::make('moneda_prestamo')
                             ->label('Moneda del Préstamo')
                             ->disabled()
                             ->dehydrated(false) // Esto evita que se guarde en la base de datos
@@ -147,40 +150,18 @@ class ReciboResource extends Resource
                                             $set('numero_cuota', $planpago->numero_cuota);
                                             $set('monto_principal', $planpago->saldo_principal);
                                             $set('monto_intereses', $planpago->saldo_interes);
-
+                                    
+                                            // Calcular y redondear el total
+                                            $totalCuota = round($planpago->saldo_principal + $planpago->saldo_interes, 2);
+                                    
                                             // Si es pago normal, establecer monto_recibo como el total
                                             if ($get('../../tipo_pago') === 'normal') {
-                                                $set(
-                                                    '../../monto_recibo',
-                                                    $planpago->saldo_principal +
-                                                        $planpago->saldo_interes
-                                                );
+                                                $set('../../monto_recibo', $totalCuota);
                                             }
-
-                                            $set(
-                                                'monto_cuota',
-                                                $planpago->saldo_principal +
-                                                    $planpago->saldo_interes
-                                            );
+                                    
+                                            $set('monto_cuota', $totalCuota);
                                         }
-                                    })
-                                    ->rules([
-                                        function (Forms\Get $get) {
-                                            return function (string $attribute, $value, Closure $fail) use ($get) {
-                                                if ($get('../../tipo_pago') === 'normal' && $value) {
-                                                    $existeReciboNormal = \App\Models\DetalleRecibo::where('planpago_id', $value)
-                                                        ->whereHas('recibo', function ($q) {
-                                                            $q->where('tipo_pago', 'normal')
-                                                                ->where('estado', '!=', 'A'); // Excluir anulados
-                                                        })->exists();
-
-                                                    if ($existeReciboNormal) {
-                                                        $fail('Esta cuota ya tiene un recibo normal asociado. Use pago parcial si desea agregar otro pago.');
-                                                    }
-                                                }
-                                            };
-                                        }
-                                    ]),
+                                    }),
 
                                 Forms\Components\TextInput::make('monto_principal')
                                     ->label('Principal')
@@ -210,6 +191,8 @@ class ReciboResource extends Resource
                                     ->label('Total Cuota')
                                     ->numeric()
                                     ->required()
+                                    ->formatStateUsing(fn($state) => $state ? number_format($state, 2, '.', '') : '0.00')
+                                    ->extraInputAttributes(['style' => 'text-align: right;'])
                                     ->minValue(0)
                                     ->disabled(),
                             ])
@@ -272,7 +255,7 @@ class ReciboResource extends Resource
                         return $simbolo . ' ' . number_format($state, 2);
                     })
                     ->sortable(),
-                    
+
                 Tables\Columns\TextColumn::make('fecha_pago')
                     ->date()
                     ->sortable(),
@@ -331,16 +314,16 @@ class ReciboResource extends Resource
             }
 
             $data['detalles'] = array_map(function ($detalle) {
-                $montoCuota = (
-                    ($detalle['monto_principal'] ?? 0) +
-                    ($detalle['monto_intereses'] ?? 0)
-                );
+                // Redondear a 2 decimales
+                $montoPrincipal = round($detalle['monto_principal'] ?? 0, 2);
+                $montoIntereses = round($detalle['monto_intereses'] ?? 0, 2);
+                $montoCuota = round($montoPrincipal + $montoIntereses, 2);
 
                 return [
                     'planpago_id' => $detalle['planpago_id'],
                     'numero_cuota' => $detalle['numero_cuota'] ?? 1,
-                    'monto_principal' => $detalle['monto_principal'] ?? 0,
-                    'monto_intereses' => $detalle['monto_intereses'] ?? 0,
+                    'monto_principal' => $montoPrincipal,
+                    'monto_intereses' => $montoIntereses,
                     'monto_cuota' => $montoCuota,
                     'recibo_id' => $data['id'] ?? null
                 ];
@@ -349,7 +332,7 @@ class ReciboResource extends Resource
 
         // Si es pago normal, el monto del recibo debe ser igual al total de la cuota
         if ($data['tipo_pago'] === 'normal' && isset($data['detalles'][0])) {
-            $data['monto_recibo'] = $data['detalles'][0]['monto_cuota'];
+            $data['monto_recibo'] = round($data['detalles'][0]['monto_cuota'], 2);
         }
 
         return $data;

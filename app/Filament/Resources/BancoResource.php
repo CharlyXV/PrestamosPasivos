@@ -31,49 +31,41 @@ class BancoResource extends Resource
                 TextInput::make('nombre_banco')
                     ->label('Nombre del Banco')
                     ->required()
-                    ->maxLength(255)
-                    ->unique(ignoreRecord: true)
-                    ->validationMessages([
-                        'required' => 'El nombre del banco es obligatorio',
-                        'maxLength' => 'El nombre no puede exceder 255 caracteres',
-                        'unique' => 'Este banco ya está registrado'
-                    ]),
-
+                    ->maxLength(255),
+                    
                 TextInput::make('cuenta_desembolsoB')
                     ->label('Cuenta de Desembolso')
                     ->required()
-                    ->maxLength(255)
-                    ->unique(ignoreRecord: true)
-                    ->mask('9999-9999-9999-9999')
-                    ->placeholder('Ej: 1234-5678-9012-3456')
-                    ->validationMessages([
-                        'required' => 'La cuenta de desembolso es obligatoria',
-                        'maxLength' => 'La cuenta no puede exceder 255 caracteres',
-                        'unique' => 'Esta cuenta ya está registrada'
-                    ])
+                    ->maxLength(255),
+                    
+                // Nuevos campos
+                Forms\Components\DatePicker::make('fecha_vencimiento_linea')
+                    ->label('Fecha Vencimiento Línea')
+                    ->native(false)
+                    ->displayFormat('d/m/Y'),
+                    
+                Forms\Components\TextInput::make('capital_trabajo')
+                    ->label('Capital de Trabajo')
+                    ->numeric()
+                    ->prefix('$')
             ]);
     }
-
+    
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('nombre_banco')
-                    ->label('Nombre')
-                    ->searchable()
-                    ->sortable(),
-
-                TextColumn::make('cuenta_desembolsoB')
-                    ->label('Cuenta')
-                    ->searchable()
-                    ->sortable()
-                    ->formatStateUsing(fn ($state) => implode('-', str_split($state, 4))),
-
-                TextColumn::make('created_at')
-                    ->label('Registrado')
-                    ->date('d/m/Y')
-                    ->sortable()
+                TextColumn::make('nombre_banco'),
+                TextColumn::make('cuenta_desembolsoB'),
+                // Nuevas columnas
+                TextColumn::make('fecha_vencimiento_linea')
+                    ->label('Venc. Línea')
+                    ->date('d/m/Y'),
+                TextColumn::make('capital_trabajo')
+                    ->label('Capital Trabajo')
+                    ->money('USD'),
             ])
+    
             ->filters([
                 // Filters can be added here
             ])

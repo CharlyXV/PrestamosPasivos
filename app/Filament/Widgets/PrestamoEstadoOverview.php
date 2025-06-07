@@ -10,7 +10,8 @@ use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 class PrestamoEstadoOverview extends BaseWidget
 {
     protected static ?int $sort = 1;
-    
+    protected static string $layout = 'compact';
+
     protected function getStats(): array
     {
         $prestamos = Prestamo::where('estado', 'A')->get();
@@ -41,14 +42,22 @@ class PrestamoEstadoOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-currency-dollar')
                 ->color('blue')
                 ->chart([5, 3, 7, 8, 2, 9, 6])
-                ->chartColor('blue'),
+                ->chartColor('blue')
+                ->extraAttributes([
+                    'class' => 'whitespace-nowrap overflow-x-auto text-base',
+                    'style' => 'min-width: 200px; max-width: 100%;',
+                ]),
             
             Stat::make('Saldo Pendiente', CurrencyHelper::formatCurrency($saldoUSD, 'USD'))
                 ->description('Por pagar')
                 ->descriptionIcon('heroicon-m-scale')
                 ->color('indigo')
                 ->chart([9, 7, 6, 5, 4, 3, 2])
-                ->chartColor('indigo'),
+                ->chartColor('indigo')
+                ->extraAttributes([
+                    'class' => 'whitespace-nowrap overflow-x-auto text-base',
+                    'style' => 'min-width: 200px; max-width: 100%;',
+                ]),
             
             Stat::make('Avance de Pago', number_format($porcentajePagado, 1) . '%')
                 ->description('Del total financiado')
@@ -63,4 +72,10 @@ class PrestamoEstadoOverview extends BaseWidget
     {
         return 4;
     }
+
+
+    public static function formatCurrency($amount, $currency = 'USD')
+{
+    return number_format($amount, 2, '.', ',') . ' ' . strtoupper($currency);
+}
 }

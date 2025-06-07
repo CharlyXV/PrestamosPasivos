@@ -50,7 +50,7 @@ class PrestamosResource extends Resource
                             ]),
 
                         Forms\Components\TextInput::make('numero_prestamo')
-                            ->label('Número')
+                            ->label('Número Operacion')
                             ->required()
                             ->maxLength(255)
                             ->validationMessages([
@@ -72,6 +72,9 @@ class PrestamosResource extends Resource
                                 if ($state) {
                                     $banco = \App\Models\Banco::find($state);
                                     $set('cuenta_desembolso', $banco->cuenta_desembolsoB);
+                                    // Auto-rellenar los nuevos campos informativos
+                                    $set('fecha_vencimiento_linea_info', $banco->fecha_vencimiento_linea);
+                                    $set('capital_trabajo_info', $banco->capital_trabajo);
                                 }
                             }),
 
@@ -119,6 +122,7 @@ class PrestamosResource extends Resource
 
                         Forms\Components\DatePicker::make('formalizacion')
                             ->required()
+                            ->label('Fecha Desembolso')
                             ->native(false)
                             ->displayFormat('d/m/Y')
                             ->validationMessages([
@@ -146,17 +150,21 @@ class PrestamosResource extends Resource
                                 }
                             }),
 
-                        Forms\Components\TextInput::make('monto_prestamo')
+                            Forms\Components\TextInput::make('monto_prestamo')
                             ->label('Monto del Préstamo')
-                            ->numeric()
                             ->required()
                             ->validationMessages([
                                 'required' => 'El monto del préstamo es obligatorio',
-                                'numeric' => 'El monto debe ser un valor numérico',
                             ])
-                            ->live()
+                            ->live(onBlur: true)
+                            ->mask(fn() => '9,999,999,999,999,999')
+                            ->stripCharacters(['.'])
+                            ->extraInputAttributes(['style' => 'text-align: right;'])
+                            ->inputMode('decimal')
+                            ->step(0.01)
+                            ->dehydrateStateUsing(fn ($state) => str_replace(',', '', $state)) // Quita las comas al guardar
                             ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                $set('saldo_prestamo', $state);
+                                $set('saldo_prestamo', str_replace(',', '', $state)); // También quita comas para saldo_prestamo
                             }),
 
                         Select::make('estado')
@@ -166,6 +174,7 @@ class PrestamosResource extends Resource
                                 'I' => 'Incluido',
                             ])
                             ->required()
+                            ->default(fn() => 'A')
                             ->validationMessages([
                                 'required' => 'Debe seleccionar un estado',
                             ]),
@@ -174,7 +183,7 @@ class PrestamosResource extends Resource
                     ->collapsible(),
 
                 Section::make('Tasas')
-                    ->description('Condiciones de Tasas')
+
                     ->schema([
                         Select::make('tipotasa_id')
                             ->relationship('tipotasa', 'nombre_tipo_tasa')
@@ -188,12 +197,12 @@ class PrestamosResource extends Resource
 
                         Select::make('periodicidad_pago')
                             ->options([
-                                '1' => 'Anual (1 pago/año)',
-                                '2' => 'Semestral (2 pagos/año)',
-                                '3' => 'Cuatrimestral (3 pagos/año)',
-                                '4' => 'Trimestral (4 pagos/año)',
-                                '6' => 'Bimestral (6 pagos/año)',
                                 '12' => 'Mensual (12 pagos/año)',
+                                '6' => 'Bimestral (6 pagos/año)',
+                                '4' => 'Trimestral (4 pagos/año)',
+                                '3' => 'Cuatrimestral (3 pagos/año)',
+                                '2' => 'Semestral (2 pagos/año)',
+                                '1' => 'Anual (1 pago/año)',
                             ])
                             ->required()
                             ->validationMessages([
@@ -206,7 +215,7 @@ class PrestamosResource extends Resource
                                 $set('proximo_pago', null);
                             }),
 
-                            Select::make('plazo_meses')
+                        Select::make('plazo_meses')
                             ->label(function (Get $get) {
                                 $periodicidad = $get('periodicidad_pago');
                                 return match ((int)$periodicidad) {
@@ -225,7 +234,7 @@ class PrestamosResource extends Resource
                             ])
                             ->options(function (Get $get) {
                                 $periodicidad = (int)$get('periodicidad_pago');
-                        
+
                                 $getPeriodoNombre = function ($cantidad, $periodicidad) {
                                     $singular = match ($periodicidad) {
                                         1 => 'año',
@@ -236,7 +245,7 @@ class PrestamosResource extends Resource
                                         12 => 'mes',
                                         default => 'periodo'
                                     };
-                        
+
                                     $plural = match ($periodicidad) {
                                         1 => 'años',
                                         2 => 'semestres',
@@ -246,10 +255,10 @@ class PrestamosResource extends Resource
                                         12 => 'meses',
                                         default => 'periodos'
                                     };
-                        
+
                                     return $cantidad === 1 ? $singular : $plural;
                                 };
-                        
+
                                 $options = [];
                                 // Aumentamos el rango a 180
                                 for ($i = 1; $i <= 180; $i++) {
@@ -268,14 +277,14 @@ class PrestamosResource extends Resource
                                 $periodicidad = (int)$get('periodicidad_pago');
                                 $plazoPeriodos = (int)$get('plazo_meses');
                                 $formalizacion = $get('formalizacion');
-                        
+
                                 if ($periodicidad && $plazoPeriodos && $formalizacion) {
                                     $mesesTotales = $plazoPeriodos * (12 / $periodicidad);
                                     $fechaFormalizacion = \Carbon\Carbon::parse($formalizacion);
-                        
+
                                     $vencimiento = $fechaFormalizacion->copy()->addMonths($mesesTotales);
                                     $set('vencimiento', $vencimiento->format('Y-m-d'));
-                        
+
                                     $proximoPago = $fechaFormalizacion->copy()->addMonths(12 / $periodicidad);
                                     $set('proximo_pago', $proximoPago->format('Y-m-d'));
                                 }
@@ -287,7 +296,7 @@ class PrestamosResource extends Resource
                             ->required()
                             ->maxValue(100)
                             ->suffix('%')
-                            ->step(0.01)
+                            ->step(0.0001)
                             ->validationMessages([
                                 'required' => 'La tasa de interés es obligatoria',
                                 'numeric' => 'La tasa debe ser un valor numérico',
@@ -311,7 +320,7 @@ class PrestamosResource extends Resource
                     ->collapsible(),
 
                 Section::make('Detalles')
-                    ->description('Desembolsos / Saldos / Estados')
+
                     ->schema([
                         Forms\Components\DatePicker::make('vencimiento')
                             ->required()
@@ -329,17 +338,32 @@ class PrestamosResource extends Resource
                                 'required' => 'La fecha del próximo pago es obligatoria',
                             ]),
 
+                        Forms\Components\TextInput::make('fecha_vencimiento_linea_info')
+                            ->label('Fecha Venc. Línea (Banco)')
+                            ->disabled()
+                            ->dehydrated(false), // No guardar en la base de datos
+
                         Forms\Components\TextInput::make('saldo_prestamo')
                             ->label('Saldo Actual')
-                            ->numeric()
+                            
                             ->default(0)
-                            ->required()
-                            ->disabled()
                             ->dehydrated()
+                            ->required()
+                            ->mask(fn() => '9,999,999,999,999,999') // para miles
+                            ->stripCharacters(['.']) //
+                            ->extraInputAttributes(['style' => 'text-align: right;'])
+                            ->inputMode('decimal')
+                            ->step(0.01)
+                            ->dehydrateStateUsing(fn ($state) => str_replace(',', '', $state)) // Quita las comas al guardar
                             ->validationMessages([
                                 'required' => 'El saldo actual es obligatorio',
-                                'numeric' => 'El saldo debe ser un valor numérico',
                             ]),
+
+                        Forms\Components\TextInput::make('capital_trabajo_info')
+                            ->label('Capital Trabajo (Banco)')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->numeric(),
 
                         Forms\Components\Textarea::make('observacion')
                             ->label('Observaciones')
@@ -348,14 +372,15 @@ class PrestamosResource extends Resource
                     ->columns(3)
                     ->collapsible(),
 
-                    Section::make('Plan de Pagos')
+                Section::make('Plan de Pagos')
                     ->schema([
                         Livewire::make(PlanPagosTable::class)
                             ->columnSpanFull()
-                            ->hidden(fn ($operation) => $operation === 'create')
+                            ->lazy() // Esto carga el componente después del formulario principal
+                            ->hidden(fn($operation) => $operation === 'create')
                     ])
                     ->collapsible()
-                    ->hidden(fn ($operation) => $operation === 'create'),
+                    ->hidden(fn($operation) => $operation === 'create'),
             ]);
     }
 
@@ -364,12 +389,12 @@ class PrestamosResource extends Resource
         if (!$periodicidad) return 'Plazo (periodos)';
 
         return match ($periodicidad) {
-            1 => 'Plazo (en años)',
-            2 => 'Plazo (en semestres)',
-            3 => 'Plazo (en cuatrimestres)',
-            4 => 'Plazo (en trimestres)',
-            6 => 'Plazo (en bimestres)',
             12 => 'Plazo (en meses)',
+            6 => 'Plazo (en bimestres)',
+            4 => 'Plazo (en trimestres)',
+            3 => 'Plazo (en cuatrimestres)',
+            2 => 'Plazo (en semestres)',
+            1 => 'Plazo (en años)',
             default => 'Plazo (periodos)'
         };
     }
@@ -379,22 +404,22 @@ class PrestamosResource extends Resource
         if (!$periodicidad) return 'periodos';
 
         $singular = match ($periodicidad) {
-            1 => 'año',
-            2 => 'semestre',
-            3 => 'cuatrimestre',
-            4 => 'trimestre',
-            6 => 'bimestre',
             12 => 'mes',
+            6 => 'bimestre',
+            4 => 'trimestre',
+            3 => 'cuatrimestre',
+            2 => 'semestre',
+            1 => 'año',
             default => 'periodo'
         };
 
         $plural = match ($periodicidad) {
-            1 => 'años',
-            2 => 'semestres',
-            3 => 'cuatrimestres',
-            4 => 'trimestres',
-            6 => 'bimestres',
             12 => 'meses',
+            6 => 'bimestres',
+            4 => 'trimestres',
+            3 => 'cuatrimestres',
+            2 => 'semestres',
+            1 => 'años',
             default => 'periodos'
         };
 

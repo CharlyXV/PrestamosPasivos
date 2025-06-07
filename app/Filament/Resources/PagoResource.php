@@ -170,6 +170,8 @@ class PagoResource extends Resource
             ->persistFiltersInSession() // Recuerda la selección
 
             ->headerActions([
+                // En App\Filament\Resources\PagoResource.php
+
                 Action::make('generar_plan')
                     ->label('Generar Plan de Pagos')
                     ->icon('heroicon-o-plus-circle')
@@ -189,7 +191,9 @@ class PagoResource extends Resource
                             ->title('Plan de pagos generado exitosamente')
                             ->success()
                             ->send();
-                    }),
+                    })
+                    ->modalSubmitActionLabel('Procesar'), // Esta es la línea clave que cambia el texto
+                    
 
                 Action::make('importar_plan')
                     ->label('Importar Plan')

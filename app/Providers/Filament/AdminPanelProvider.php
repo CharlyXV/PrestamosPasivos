@@ -27,6 +27,7 @@ use App\Filament\Resources\AnularReciboResource;
 use App\Filament\Resources\ReciboResource;
 use App\Filament\Resources\GestionContable\ConsultaAsientoResource;
 use App\Filament\Resources\ReportesGerenciales\ReporteDisponibilidadResource;
+use Illuminate\Support\HtmlString;
 
 use App\Filament\Resources\ReportesGerenciales\ReporteGastoResource;
 
@@ -55,13 +56,13 @@ class AdminPanelProvider extends PanelProvider
                 Pages\Dashboard::class, // Página de inicio del panel
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-        ->widgets([
-            \App\Filament\Widgets\PrestamoEstadoOverview::class,
-            \App\Filament\Widgets\Pchart::class,
-            \App\Filament\Widgets\PrestamoMontoChart::class,
-            
-        ])
-                
+            ->widgets([
+                \App\Filament\Widgets\PrestamoEstadoOverview::class,
+                \App\Filament\Widgets\Pchart::class,
+                \App\Filament\Widgets\PrestamoMontoChart::class,
+
+            ])
+
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -150,6 +151,6 @@ class AdminPanelProvider extends PanelProvider
                     ->sort(4)
                     ->activeIcon('heroicon-s-x-circle'),
             ]);
-
+            
     }
 }
